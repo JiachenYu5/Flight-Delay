@@ -1,0 +1,64 @@
+---
+title: "project"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+```{r}
+setwd("/Users/PRO/Desktop/Data")
+flight <- read.csv("flights.csv", header=TRUE, sep=",", na.strings=" ")
+airline <- read.csv("airlines.csv", header=TRUE, sep=",", na.strings=" ")
+airport <- read.csv("airports.csv", header=TRUE, sep=",", na.strings=" ")
+flight_cancelled <- flight[which(flight$CANCELLED==1), ]
+```
+
+```{r}
+flight <- flight[, -c(6, 7, 10, 11, 14, 15, 16, 17, 19, 21, 22, 26)]
+```
+# Splitting the DataSet
+```{r}
+flight_diverted <- flight[which(flight$DIVERTED==1), ]
+flight_notdiverted <- flight[which(flight$DIVERTED==0), ]
+flight_notcancelled <- flight[which(flight$CANCELLED==0), ]
+flight_notcancelled_notdiverted <- flight[which(flight$CANCELLED==0 & flight$DIVERTED==0), ]
+flight_detailed_delay <- flight_notcancelled[which(
+  !is.na(flight_notcancelled$AIR_SYSTEM_DELAY)), ]
+flight_nodetail_delay_withdivert <- flight[which(is.na(flight$AIR_SYSTEM_DELAY)), ]
+flight_nodetail_delay_nodivert <- flight_notcancelled_notdiverted[
+  which(is.na(flight_notcancelled_notdiverted$AIR_SYSTEM_DELAY)), ]
+```
+
+```{r}
+# Pie chart for total contribution of different types of delay
+slices <- c(sum(flight_detailed_delay[, 27]), sum(flight_detailed_delay[, 28]),
+           sum(flight_detailed_delay[, 29]), sum(flight_detailed_delay[, 30]),
+           sum(flight_detailed_delay[, 31]))
+pct <- round(slices/sum(slices)*100)
+lbls <- c("Air System", "Security", "Airline", "Late AirCraft", "Weather")
+lbls <- paste(lbls, pct) # add percents to labels
+lbls <- paste(lbls,"%",sep="") 
+pie(slices, labels = lbls, main = "Reasons for delay")
+```
+
+```{r}
+# Using US Airline as example, calculate average departure delay and average arrival delay
+flight_US <- flight_notcancelled[which(flight_notcancelled$AIRLINE=="US"), ]
+avg_dept_delay <- mean(flight_US$DEPARTURE_DELAY)
+avg_dept_delay
+flight_US1 <- flight_notcancelled_notdiverted[which(flight_notcancelled_notdiverted$AIRLINE=="US"), ]
+avg_arr_delay1 <- mean(flight_US1$ARRIVAL_DELAY)
+avg_arr_delay1
+```
+
+```{r}
+# View the total flight frequency of all airlines
+plot(hist_plot, main = "total frequences for all airlines")
+deplay_percentage <- nrow(flight_US[which(flight_US$DEPARTURE_DELAY>0),])/nrow(flight_US)
+deplay_percentage
+extreme_delay_percentage <- nrow(flight_US[which(flight_US$DEPARTURE_DELAY>=30),])/nrow(flight_US)
+extreme_delay_percentage
+```
